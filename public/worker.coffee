@@ -94,7 +94,7 @@ representation = (value, type) ->
     else
         value
 
-evaluateDebugStatus = (vm) ->
+evaluateDebugStatus = () ->
     if vm.isWaitingForInput()
         #console.log "Waiting for input"
         postMessage({ event: "waitingForInput" })
@@ -121,7 +121,7 @@ evaluateDebugStatus = (vm) ->
 
         postMessage({ event: "paused", data: { variables: variables } })
 
-    if vm? and vm.instruction.locations? # not finished
+    if vm?.instruction.locations? # not finished
         postMessage({ event: "currentLine" , data: { line: vm.instruction.locations.lines.first } })
 
 
@@ -139,12 +139,10 @@ continueIterator = ->
         iterator = null
         vm = vmCopy
 
-    evaluateDebugStatus(vm)
+    evaluateDebugStatus()
 
 actions.debug = ({ code, input }) ->
     program = actions.compile({ code })
-
-    #console.log "Debug called"
 
     if program?
         postMessage({ event: "startDebugging" })

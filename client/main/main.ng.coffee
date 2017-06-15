@@ -335,7 +335,7 @@ EXAMPLES = [
 ]
 
 
-MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast) ->
+MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) ->
     #####
     # SCOPE VARIABLES INITIALIZATION
     #####
@@ -588,7 +588,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast) ->
             $timeout((-> # Prevents continuous flashing when using step over/step
                 if $scope.runningStatus is STATUS.RUNNING
                     $state.go('fixed-input'); $scope.selectedIndex = 0
-            ), 50)
+            ), 100)
 
         $scope.runningStatus = STATUS.RUNNING
 
@@ -839,4 +839,4 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast) ->
     ]
 
 
-app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', MainCtrl])
+app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', '$timeout', MainCtrl])

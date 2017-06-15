@@ -3,56 +3,6 @@ var actions, continueIterator, debug, debugAction, debugging, evaluateDebugStatu
 
 importScripts('/lib/cmm/index.min.js');
 
-
-/*
-iterator = null
-
-cmm.events.onstdout((output) -> setOutput output)
-
-setAst = (s) -> postMessage({ type: "ast", value: s })
-setOutput = (s) -> postMessage({ type: "output", value: s })
-setErrorMsg = (s) -> postMessage({ type: "errormsg", value: s })
-setDone = -> postMessage({ type: "done" })
-
-isCIN = (value) -> value?.getType?() is 'CIN' and cmm.hooks.isInputBufferEmpty()
-
-makeCompilation = (code) ->
-    try
-        ast = cmm.compile code
-    catch error
-        setErrorMsg "#{error.stack ? error.message ? error}"
-        return
-
-    setAst ast.toString()
-
-    ast
-
-runProgram = (ast, input, begin = no) ->
-    try
-        iterator = cmm.execute(ast, input) if begin
-        loop
-            it = iterator.next()
-            if it.done
-                setDone()
-                return
-            if isCIN it.value.value
-                return
-
-    catch error
-        console.log(error.stack ? error.message ? error)
-        setErrorMsg "#{error.stack ? error.message? error}"
- */
-
-
-/*
-    listen.output = ({ string }) ->
-    listen.compilationError = ({ message, description }) ->
-    listen.startRunning = ->
-    listen.startDebugging = ->
-    listen.compilationSuccessful = ({ program, ast }) ->
-    listen.executionFinish = ({ status }) ->
- */
-
 memory = new cmm.Memory;
 
 debug = new cmm.Debugger;
@@ -82,14 +32,10 @@ actions.input = function(arg) {
   if (debugging) {
     wasWaiting = vm.isWaitingForInput();
     vm.input(input);
-    console.log("Input end");
     if (vm.isWaitingForInput()) {
       return evaluateDebugStatus(vm);
     } else if (wasWaiting && (iterator != null)) {
-      console.log("Continuing iterator");
       return continueIterator();
-    } else {
-      return console.log("Not continuing iterator");
     }
   } else {
     return resume(input);
@@ -195,15 +141,13 @@ representation = function(value, type) {
   }
 };
 
-evaluateDebugStatus = function(vm) {
+evaluateDebugStatus = function() {
   var isArray, isChar, ref, type, value, varId, variable, variables;
   if (vm.isWaitingForInput()) {
-    console.log("Waiting for input");
     postMessage({
       event: "waitingForInput"
     });
   } else if (vm.finished) {
-    console.log("Finished");
     postMessage({
       event: "executionFinish",
       data: {
@@ -212,7 +156,6 @@ evaluateDebugStatus = function(vm) {
     });
     iterator = vm = null;
   } else {
-    console.log("Paused");
     variables = {};
     ref = vm.instruction.visibleVariables;
     for (varId in ref) {
@@ -241,7 +184,7 @@ evaluateDebugStatus = function(vm) {
       }
     });
   }
-  if ((vm != null) && (vm.instruction.locations != null)) {
+  if ((vm != null ? vm.instruction.locations : void 0) != null) {
     return postMessage({
       event: "currentLine",
       data: {
@@ -266,7 +209,7 @@ continueIterator = function() {
     iterator = null;
     vm = vmCopy;
   }
-  return evaluateDebugStatus(vm);
+  return evaluateDebugStatus();
 };
 
 actions.debug = function(arg) {
@@ -275,7 +218,6 @@ actions.debug = function(arg) {
   program = actions.compile({
     code: code
   });
-  console.log("Debug called");
   if (program != null) {
     postMessage({
       event: "startDebugging"
@@ -285,29 +227,22 @@ actions.debug = function(arg) {
     program.attachOutputListener(output);
     iterator = debug.debug(program);
     vm = iterator.next().value;
-    console.log("Debug: start");
     if (input != null) {
       vm.input(input);
     }
     vm = iterator.next().value;
-    console.log("Debug: stop");
     return evaluateDebugStatus(vm);
   }
 };
 
 debugAction = function(name) {
-  console.log("Debug action " + name);
   if (!vm.isWaitingForInput()) {
     postMessage({
       event: "resumeRunning"
     });
     iterator = debug[name]();
-    console.log("Debug action start");
     vm = iterator.next().value;
-    console.log("Debug action end");
     return evaluateDebugStatus(vm);
-  } else {
-    return console.log("Not running debug action, waiting for input");
   }
 };
 
@@ -358,7 +293,6 @@ actions.setVariable = function(arg) {
     value = variable.type.parse(value);
   } catch (error1) {
     error = error1;
-    console.log(error.stack);
     cannotParse = true;
   }
   if (cannotParse) {
@@ -393,29 +327,6 @@ onmessage = function(e) {
   } else {
     return actions[command](data);
   }
-
-  /*
-  switch command
-      when "compile"
-          makeCompilation(code, yes)
-      when "input"
-          cmm.hooks.setInput input
-          if iterator?
-              runProgram()
-      when "run"
-          ast = makeCompilation(code)
-          if ast?
-              runProgram(ast, input, yes)
-      when "debug"
-          console.log "debug"
-      when "stop"
-      when "pause"
-      when "stepOver"
-      when "stepInto"
-      when "stepOut"
-      when "endOfInput"
-          cmm.hooks.endOfInput()
-   */
 };
 
 //# sourceMappingURL=worker.js.map
