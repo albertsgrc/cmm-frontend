@@ -1,3 +1,3 @@
 cd ../cmm
 gulp build
-cp ./build/index.min.js ../cmm-frontend-2/app/public/lib/cmm
+cp ./build/index.min.js ../cmm-frontend/public/lib/cmm
