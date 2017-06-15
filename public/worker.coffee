@@ -1,53 +1,5 @@
 importScripts '/lib/cmm/index.min.js'
 
-###
-iterator = null
-
-cmm.events.onstdout((output) -> setOutput output)
-
-setAst = (s) -> postMessage({ type: "ast", value: s })
-setOutput = (s) -> postMessage({ type: "output", value: s })
-setErrorMsg = (s) -> postMessage({ type: "errormsg", value: s })
-setDone = -> postMessage({ type: "done" })
-
-isCIN = (value) -> value?.getType?() is 'CIN' and cmm.hooks.isInputBufferEmpty()
-
-makeCompilation = (code) ->
-    try
-        ast = cmm.compile code
-    catch error
-        setErrorMsg "#{error.stack ? error.message ? error}"
-        return
-
-    setAst ast.toString()
-
-    ast
-
-runProgram = (ast, input, begin = no) ->
-    try
-        iterator = cmm.execute(ast, input) if begin
-        loop
-            it = iterator.next()
-            if it.done
-                setDone()
-                return
-            if isCIN it.value.value
-                return
-
-    catch error
-        console.log(error.stack ? error.message ? error)
-        setErrorMsg "#{error.stack ? error.message? error}"
-###
-
-###
-    listen.output = ({ string }) ->
-    listen.compilationError = ({ message, description }) ->
-    listen.startRunning = ->
-    listen.startDebugging = ->
-    listen.compilationSuccessful = ({ program, ast }) ->
-    listen.executionFinish = ({ status }) ->
-###
-
 memory = new cmm.Memory
 debug = new cmm.Debugger
 vm = null
@@ -65,14 +17,14 @@ actions.input = ({ input }) ->
 
         vm.input(input)
 
-        console.log "Input end"
+        #console.log "Input end"
 
         if vm.isWaitingForInput()
             evaluateDebugStatus(vm)
         else if wasWaiting and iterator?
-            console.log "Continuing iterator"
+            #console.log "Continuing iterator"
             continueIterator()
-        else console.log "Not continuing iterator"
+        #else console.log "Not continuing iterator"
     else
         resume(input)
 
@@ -144,14 +96,14 @@ representation = (value, type) ->
 
 evaluateDebugStatus = (vm) ->
     if vm.isWaitingForInput()
-        console.log "Waiting for input"
+        #console.log "Waiting for input"
         postMessage({ event: "waitingForInput" })
     else if vm.finished
-        console.log "Finished"
+        #console.log "Finished"
         postMessage({ event: "executionFinish", data: { status: vm.status } })
         iterator = vm = null
     else
-        console.log "Paused"
+        #console.log "Paused"
         variables = {}
         for varId, variable of vm.instruction.visibleVariables
             type = variable.type
@@ -192,7 +144,7 @@ continueIterator = ->
 actions.debug = ({ code, input }) ->
     program = actions.compile({ code })
 
-    console.log "Debug called"
+    #console.log "Debug called"
 
     if program?
         postMessage({ event: "startDebugging" })
@@ -206,33 +158,33 @@ actions.debug = ({ code, input }) ->
 
         { value: vm } = iterator.next()
 
-        console.log "Debug: start"
+        #console.log "Debug: start"
 
         vm.input(input) if input?
 
         { value: vm } = iterator.next()
 
-        console.log "Debug: stop"
+        #console.log "Debug: stop"
 
         evaluateDebugStatus(vm)
 
 
 debugAction = (name) ->
-    console.log "Debug action #{name}"
+    #console.log "Debug action #{name}"
     unless vm.isWaitingForInput()
         postMessage({ event: "resumeRunning" })
 
         iterator = debug[name]()
 
-        console.log "Debug action start"
+        #console.log "Debug action start"
 
         { value: vm } = iterator.next()
 
-        console.log "Debug action end"
+        #console.log "Debug action end"
 
         evaluateDebugStatus(vm)
-    else
-        console.log "Not running debug action, waiting for input"
+    #else
+        #console.log "Not running debug action, waiting for input"
 
 actions.stepOver = -> debugAction('stepOver')
 
@@ -258,7 +210,7 @@ actions.setVariable = ({ id, value }) ->
     try
         value = variable.type.parse(value)
     catch error
-        console.log error.stack
+        #console.log error.stack
         cannotParse = yes
 
     if cannotParse
@@ -282,27 +234,3 @@ onmessage = (e) ->
         throw "invalid command #{command}"
     else
         actions[command](data)
-
-    ###
-    switch command
-        when "compile"
-            makeCompilation(code, yes)
-        when "input"
-            cmm.hooks.setInput input
-            if iterator?
-                runProgram()
-        when "run"
-            ast = makeCompilation(code)
-            if ast?
-                runProgram(ast, input, yes)
-        when "debug"
-            console.log "debug"
-        when "stop"
-        when "pause"
-        when "stepOver"
-        when "stepInto"
-        when "stepOut"
-        when "endOfInput"
-            cmm.hooks.endOfInput()
-
-    ###

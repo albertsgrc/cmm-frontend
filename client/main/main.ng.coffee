@@ -525,7 +525,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast) ->
         term.scroll_to_bottom()
 
     listen.startRunning = ->
-        console.log "startRunning"
+        #console.log "startRunning"
         $scope.running = yes
         $scope.runningStatus = STATUS.RUNNING
         unless $mdMedia('gt-sm')
@@ -583,7 +583,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast) ->
         currentLine = null
 
     listen.resumeRunning = ->
-        console.log "resume"
+        #console.log "resume"
         if $scope.debugging
             $timeout((-> # Prevents continuous flashing when using step over/step
                 if $scope.runningStatus is STATUS.RUNNING
