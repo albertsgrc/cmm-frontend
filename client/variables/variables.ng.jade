@@ -1,0 +1,27 @@
+//
+   Created by albert on 10/6/17.
+    md-list
+
+div.variablesTableContainer(flex="")
+    md-table-container.variablesTable
+        table(md-table="")
+            thead.md-primary(md-head="")
+                tr(md-row="")
+                    th.uppercase(md-column="" style="width: 40px;") Specifiers
+                    th.uppercase(md-column="" style="width: 60px;") Type
+                    th.uppercase(md-column="" style="width: 100px;") Identifier
+                    th.uppercase(md-column="") Value
+            tbody(md-body="")
+                tr(md-row="" ng-repeat="(name, variable) in variables")
+                    td.type.bold(md-cell="")
+                        span(ng-show="variable.const") const
+                    td.type.bold(md-cell="") {{ variable.type }}
+                    td.identifier.bold(md-cell="") {{ name }}
+                    td.bold(md-cell="" ng-click="tryToEdit(variable, name)" ng-hide="variable.edit") {{ variable.repr }}
+                    td.variableEdit(ng-show="variable.edit" md-cell="")
+                        md-input-container
+                            input(ng-model="variable.editValue" aria-label="edit value")
+                        md-button.md-icon-button(ng-click="confirmVariableEdit(variable, name)")
+                            i.material-icons.done done
+                        md-button.md-icon-button(ng-click="cancelVariableEdit(variable)")
+                            i.material-icons.cancel cancel

@@ -1,0 +1,60 @@
+
+//div(style='display: flex; height: 100%;')
+    // left side
+    div(resizable='', r-directions="['right']", r-flex='true', style='width: 50%; max-width: 80%; min-width: 20%;')
+        #editor
+    // right side
+    div(style='flex: 1; margin-left: 14px;')
+        #terminal
+
+div(layout="column" layout-gt-sm="row"  flex="")
+    div.left(resizable="" r-directions="['right', 'bottom']" r-flex="true" layout="column")
+        md-toolbar
+            .md-toolbar-tools(ng-cloak="" style="padding-left: 20px;")
+                div.buttons(flex="")
+                    md-button.md-raised.md-accent(aria-label='Menu with Tooltip Delay' ng-repeat="button in buttons" ng-style="{ 'background-color': button.color }" ng-click="button.action()" ng-show="button.showCondition()" ng-cloak="")
+                        md-icon
+                            i.material-icons {{ button.icon }}
+                        span(ng-show="$mdMedia('min-width: 1600px')") {{ button.text }}
+                        md-tooltip(md-delay='700')
+                            | {{ button.tooltip }}
+
+                //span(flex)
+
+                //md-slider-container
+                    md-slider(min="0.1" max="10" ng-model="speed" aria-label="speed")
+                    md-input-container
+                        input.sliderInput(type="number" ng-model="speed")
+
+                span.status(ng-show="running")
+                    | {{ runningStatus.text }} &nbsp;&nbsp;
+                    md-icon
+                        i.material-icons(ng-style="{ color: runningStatus.color }") {{ runningStatus.icon }}
+                    md-tooltip(md-delay='0')
+                        | {{ runningStatus.tooltip }}
+
+                md-menu(md-position-mode="target-right target")
+                    md-button.md-icon-button(ng-click="$mdMenu.open($event)")
+                        md-icon
+                            i.material-icons.more-button file_download
+                        md-tooltip(md-delay='100')
+                            | Load a code example
+                    md-menu-content(width="4")
+                        md-menu-item(ng-repeat="example in examples")
+                            md-button(ng-click="selectExample(example)")
+                                p(flex="") {{ example.name }}
+
+        #editor(flex="")
+    div.right(layout="column" flex="")
+        .tabbedOuter(flex="" layout="column")
+            md-tabs.md-primary(md-selected="selectedIndex" md-border-bottom md-autoselect)
+                md-tab(ng-repeat="tab in tabs" ui-sref="{{tab.state}}" ng-if="tab.showCondition()")
+                    md-tab-label
+                        md-icon
+                            i.material-icons {{tab.icon}}
+                        span &nbsp;&nbsp;{{tab.title}}
+
+            md-content.tabbed(ui-view="" flex="" layout="row")
+
+        div.terminalOuter(resizable="" r-directions="['top']" r-flex="true" ng-show="$mdMedia('min-width: 960px')" layout="row")
+            #terminal(flex="")
