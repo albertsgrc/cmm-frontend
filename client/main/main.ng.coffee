@@ -832,7 +832,6 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
             action: $scope.stepInstruction
             showCondition: -> $scope.debugging and $scope.runningStatus is STATUS.PAUSED
         }
-
     ]
 
 
