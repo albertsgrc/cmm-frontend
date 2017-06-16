@@ -397,11 +397,13 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
     $rootScope.$on('$stateChangeStart', (event, toState, toParams, fromState, fromParams) ->
         if toState.name isnt "terminal"
             $("#terminal").appendTo(".terminalOuter")
+            $.terminal.active()?.scroll_to_bottom()
     )
 
     $rootScope.$on('$viewContentLoaded', (event, toState, toParams, fromState, fromParams) ->
         if $state.current.name is "terminal"
             $("#terminal").appendTo("#terminalTab")
+            $.terminal.active()?.scroll_to_bottom()
     )
 
     $scope.$watch((-> $mdMedia('gt-sm')), (big) ->
@@ -522,7 +524,6 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
 
         term = terminal()
         term.error message
-        term.scroll_to_bottom()
 
     listen.startRunning = ->
         #console.log "startRunning"
@@ -539,8 +540,6 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
             name: 'runEnvironment'
             prompt: ''
         )
-
-        terminal().scroll_to_bottom()
 
     listen.startDebugging = ->
         $scope.debugging = yes
@@ -562,8 +561,6 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
         $scope.astString = ast
 
         $scope.instructionsString = instructions
-
-        terminal().scroll_to_bottom()
 
     listen.executionFinish = ({ status }) ->
         # TODO: Show status somehow
