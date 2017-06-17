@@ -372,6 +372,12 @@ STATUS = {
             text: "Exited with status <b>#{status}</b>"
             tooltip: if status is 0 then "Execution finished correctly" else "Execution finished abnormaly"
         }
+    KILLED: {
+            icon: "stop"
+            color: 'white'
+            text: 'Killed'
+            tooltip: "You killed the program"
+    }
 }
 
 MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $sce, $mdDialog) ->
@@ -608,8 +614,15 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         term.pop()
         $scope.running = $scope.debugging = no
         $scope.waitingForInput = no
-        $scope.runningStatus = STATUS.EXITED(status)
-        $scope.runningStatus.text = $sce.trustAsHtml($scope.runningStatus.text)
+
+
+        if status?
+            $scope.runningStatus = STATUS.EXITED(status)
+            $scope.runningStatus.text = $sce.trustAsHtml($scope.runningStatus.text)
+        else
+            $scope.runningStatus = STATUS.KILLED
+
+
         output = null
         editor.getSession().removeMarker currentLine if currentLine?
         currentLine = null
