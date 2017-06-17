@@ -334,32 +334,55 @@ EXAMPLES = [
 
 ]
 
+STATUS = {
+    WAITING_INPUT: {
+        icon: 'input'
+        tooltip: "Waiting for input"
+        color: "white"
+        text: "Waiting for input"
+    }
+    RUNNING: {
+        icon: 'directions_run'
+        tooltip: "Running"
+        color: "white"
+        text: "Running"
+    }
+    PAUSED: {
+        icon: "pause"
+        tooltip: "Paused"
+        color: "white"
+        text: ""
+    }
+    COMPILATION_SUCCESSFUL: {
+        icon: 'done'
+        color: 'white'
+        text: 'Compilation successful'
+        tooltip: "See AST and instructions tabs on the right"
+    }
+    COMPILATION_ERROR: {
+        icon: 'error'
+        color: '#F48FB1'
+        text: 'Compilation error'
+        tooltip: "See the terminal for errors"
+    }
+    EXITED: (status) ->
+        {
+            icon: if status is 0 then 'done' else 'error'
+            color: if status is 0 then 'white' else '#F48FB1'
+            text: "Exited with status <b>#{status}</b>"
+            tooltip: if status is 0 then "Execution finished correctly" else "Execution finished abnormaly"
+        }
+}
 
-MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) ->
+MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $sce) ->
+
+    for status, value of STATUS
+        if value.text?
+            value.text = $sce.trustAsHtml(value.text)
+
     #####
     # SCOPE VARIABLES INITIALIZATION
     #####
-
-    STATUS = {
-        WAITING_INPUT: {
-            icon: 'input'
-            tooltip: "Waiting for input"
-            color: "white"
-            text: "Waiting for input"
-        }
-        RUNNING: {
-            icon: 'directions_run'
-            tooltip: "Running"
-            color: "white"
-            text: "Running"
-        }
-        PAUSED: {
-            icon: "pause"
-            tooltip: "Paused"
-            color: "white"
-            text: ""
-        }
-    }
 
     initialExample = 0
 
@@ -521,6 +544,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
         $scope.compiled = yes
 
         $scope.compilerHelpString = description ? ""
+        $scope.runningStatus = STATUS.COMPILATION_ERROR
 
         term = terminal()
         term.error message
@@ -530,7 +554,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
         $scope.running = yes
         $scope.runningStatus = STATUS.RUNNING
         unless $mdMedia('gt-sm')
-            setTimeout((->$state.go('terminal'); $scope.selectedIndex = 0), 100)
+            $timeout((->$state.go('terminal'); $scope.selectedIndex = 0))
 
         $.terminal.active().push((command) ->
             output = null
@@ -546,7 +570,6 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
 
         listen.startRunning()
 
-        # TODO: Go to debugging tab when implemented
 
     listen.currentLine = ({ line }) ->
         editor.getSession().removeMarker currentLine if currentLine?
@@ -554,7 +577,7 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
         range = new aceRange(row, 0, row, 1);
         currentLine = editor.getSession().addMarker(range, "current-line", "fullLine", true)
 
-    listen.compilationSuccessful = ({ ast, instructions }) ->
+    listen.compilationSuccessful = ({ ast, instructions, goingToRun }) ->
         $scope.compiled = yes
         $scope.compileError = no
 
@@ -562,10 +585,13 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
 
         $scope.instructionsString = instructions
 
+        unless goingToRun
+            $scope.runningStatus = STATUS.COMPILATION_SUCCESSFUL
+
     listen.executionFinish = ({ status }) ->
         # TODO: Show status somehow
 
-        if $scope.debugging
+        if $scope.debugging and $state.current.name is "variables"
             $state.go('fixed-input')
             $scope.selectedIndex = 0
 
@@ -574,10 +600,13 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
         term.pop()
         $scope.running = $scope.debugging = no
         $scope.waitingForInput = no
-        $scope.runningStatus = no
+        $scope.runningStatus = STATUS.EXITED(status)
+        $scope.runningStatus.text = $sce.trustAsHtml($scope.runningStatus.text)
         output = null
         editor.getSession().removeMarker currentLine if currentLine?
         currentLine = null
+
+
 
     listen.resumeRunning = ->
         #console.log "resume"
@@ -591,10 +620,13 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
 
     listen.waitingForInput = ->
         $scope.runningStatus = STATUS.WAITING_INPUT
+        $.terminal.active().focus()
 
     listen.paused = ({ variables }) ->
         $scope.variables = variables
         $scope.runningStatus = STATUS.PAUSED
+        $state.go('variables')
+        $timeout(->$scope.selectedIndex = 3)
 
     listen.variableSet = ({ id, value, repr }) ->
         $scope.variables[id].value = value
@@ -835,4 +867,4 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout) -
     ]
 
 
-app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', '$timeout', MainCtrl])
+app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', '$timeout', '$sce', MainCtrl])

@@ -26,8 +26,8 @@ div(layout="column" layout-gt-sm="row"  flex="")
                     md-input-container
                         input.sliderInput(type="number" ng-model="speed")
 
-                span.status(ng-show="running")
-                    | {{ runningStatus.text }} &nbsp;&nbsp;
+                span.status(ng-show="runningStatus !== false")
+                    span.statusText(ng-bind-html="runningStatus.text")
                     md-icon
                         i.material-icons(ng-style="{ color: runningStatus.color }") {{ runningStatus.icon }}
                     md-tooltip(md-delay='0')
@@ -47,7 +47,7 @@ div(layout="column" layout-gt-sm="row"  flex="")
         #editor(flex="")
     div.right(layout="column" flex="")
         .tabbedOuter(flex="" layout="column")
-            md-tabs.md-primary(md-selected="selectedIndex" md-border-bottom md-autoselect)
+            md-tabs.md-primary(md-selected="selectedIndex" md-border-bottom)
                 md-tab(ng-repeat="tab in tabs" ui-sref="{{tab.state}}" ng-if="tab.showCondition()")
                     md-tab-label
                         md-icon

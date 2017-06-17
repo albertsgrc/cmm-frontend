@@ -29,7 +29,7 @@ actions.input = ({ input }) ->
         resume(input)
 
 
-actions.compile = ({ code }) ->
+actions.compile = ({ code, goingToRun }) ->
     try
         { program, ast } = cmm.compile code
     catch error
@@ -38,7 +38,7 @@ actions.compile = ({ code }) ->
         postMessage({ event: "compilationError", data: { message, description } })
         return
 
-    postMessage({ event: "compilationSuccessful", data: { instructions: program.instructionsToString(), ast: ast.toString() } })
+    postMessage({ event: "compilationSuccessful", data: { instructions: program.instructionsToString(), ast: ast.toString(), goingToRun } })
 
     return program
 
@@ -72,7 +72,7 @@ resume = (input) ->
 
 
 actions.run = ({ code, input }) ->
-    program = actions.compile({ code })
+    program = actions.compile({ code, goingToRun: yes })
 
     if program?
         postMessage({ event: "startRunning" })
@@ -94,8 +94,28 @@ representation = (value, type) ->
     else
         value
 
+sendPaused = ->
+    variables = {}
+    for varId, variable of vm.instruction.visibleVariables
+        type = variable.type
+
+        isChar = type.id is 'CHAR'
+
+        isArray = type.isArray
+
+        if isArray
+            value = type.castings.COUT(variable.memoryReference.getAddress())
+        else
+            value = type.castings.COUT(variable.memoryReference.read(memory))
+
+        variables[varId] = { type: type.getSymbol(), value, const: variable.specifiers.const, isArray, repr: representation(value, type), isChar  }
+
+    postMessage({ event: "paused", data: { variables: variables } })
+
 evaluateDebugStatus = () ->
-    if vm.isWaitingForInput()
+    if not vm.finished and vm.instruction.breakpoint
+        sendPaused()
+    else if vm.isWaitingForInput()
         #console.log "Waiting for input"
         postMessage({ event: "waitingForInput" })
     else if vm.finished
@@ -104,22 +124,7 @@ evaluateDebugStatus = () ->
         iterator = vm = null
     else
         #console.log "Paused"
-        variables = {}
-        for varId, variable of vm.instruction.visibleVariables
-            type = variable.type
-
-            isChar = type.id is 'CHAR'
-
-            isArray = type.isArray
-
-            if isArray
-                value = type.castings.COUT(variable.memoryReference.getAddress())
-            else
-                value = type.castings.COUT(variable.memoryReference.read(memory))
-
-            variables[varId] = { type: type.getSymbol(), value, const: variable.specifiers.const, isArray, repr: representation(value, type), isChar  }
-
-        postMessage({ event: "paused", data: { variables: variables } })
+        sendPaused()
 
     if vm?.instruction.locations? # not finished
         postMessage({ event: "currentLine" , data: { line: vm.instruction.locations.lines.first } })
@@ -139,10 +144,12 @@ continueIterator = ->
         iterator = null
         vm = vmCopy
 
-    evaluateDebugStatus()
+    evaluateDebugStatus(vm)
 
 actions.debug = ({ code, input }) ->
-    program = actions.compile({ code })
+    program = actions.compile({ code, goingToRun: yes })
+
+    #console.log "Debug called"
 
     if program?
         postMessage({ event: "startDebugging" })
@@ -169,7 +176,10 @@ actions.debug = ({ code, input }) ->
 
 debugAction = (name) ->
     #console.log "Debug action #{name}"
-    unless vm.isWaitingForInput()
+    if vm.isWaitingForInput()
+        postMessage({ event: "waitingForInput" })
+        iterator = debug[name]()
+    else
         postMessage({ event: "resumeRunning" })
 
         iterator = debug[name]()
