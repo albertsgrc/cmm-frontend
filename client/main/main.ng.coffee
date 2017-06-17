@@ -546,6 +546,10 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         $scope.compilerHelpString = description ? ""
         $scope.runningStatus = STATUS.COMPILATION_ERROR
 
+        if $scope.compilerHelpString.length > 0
+            $state.go('compilation-help')
+            $timeout(->$scope.selectedIndex = 1)
+
         term = terminal()
         term.error message
 
@@ -578,6 +582,10 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         currentLine = editor.getSession().addMarker(range, "current-line", "fullLine", true)
 
     listen.compilationSuccessful = ({ ast, instructions, goingToRun }) ->
+        if $scope.compileError
+            $state.go('instructions')
+            $timeout(-> $scope.selectedIndex = 2)
+
         $scope.compiled = yes
         $scope.compileError = no
 
