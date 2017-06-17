@@ -7,7 +7,17 @@ iterator = null
 debugging = no
 flagPause = no
 
-output = (string) -> postMessage({ event: "output", data: { string } })
+buffer = (fn) ->
+    timeout = null
+    buff = ""
+
+    (input) ->
+        buff += input
+        clearInterval(timeout)
+        timeout = setTimeout((-> fn(buff); buff = ""))
+
+
+output = buffer((string) -> postMessage({ event: "output", data: { string } }))
 
 actions = {}
 

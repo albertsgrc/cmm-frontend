@@ -534,16 +534,17 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         terminal().echo(if msg.length is 0 then "\0" else msg)
 
     listen.output = ({ string }) ->
-        term = terminal()
-        lines = string.split('\n')
-        if lines.length is 1
-            term.set_prompt(output = term.get_prompt() + lines[0])
-        else
-            echo((output ? "") + lines[0])
-            for line in lines[1...-1]
-                echo(line)
+        if string.length
+            term = terminal()
+            lines = string.split('\n')
+            if lines.length is 1
+                term.set_prompt(output = term.get_prompt() + lines[0])
+            else
+                echo((output ? "") + lines[0])
+                for line in lines[1...-1]
+                    echo(line)
 
-            term.set_prompt(output = lines[lines.length - 1])
+                term.set_prompt(output = lines[lines.length - 1])
 
     listen.compilationError = ({ message, description }) ->
         $scope.compileError = yes
@@ -612,6 +613,10 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         term = terminal()
         term.echo(output) if output?
         term.pop()
+
+        # Output can arrive after executionFinish signal, so we must wait for the call stack to clear
+        setTimeout(->term.set_prompt("> "))
+
         $scope.running = $scope.debugging = no
         $scope.waitingForInput = no
 
