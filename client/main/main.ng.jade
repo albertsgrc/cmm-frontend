@@ -44,6 +44,20 @@ div(layout="column" layout-gt-sm="row"  flex="")
                             md-button(ng-click="selectExample(example)")
                                 p(flex="") {{ example.name }}
 
+                md-menu(md-position-mode="target-right target")
+                    md-button.md-icon-button(ng-click="$mdMenu.open($event)")
+                        md-icon
+                            i.material-icons.more-button info
+                        md-tooltip(md-delay='100')
+                            | Load a code example
+                    md-menu-content(width="4")
+                        md-menu-item
+                            md-button(ng-click="showAbout($event)")
+                                p(flex="") About
+                        //md-menu-item
+                            md-button(ng-click="showHelp($event)")
+                                p(flex="") Help
+
         #editor(flex="")
     div.right(layout="column" flex="")
         .tabbedOuter(flex="" layout="column")

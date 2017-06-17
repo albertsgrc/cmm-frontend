@@ -374,7 +374,7 @@ STATUS = {
         }
 }
 
-MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $sce) ->
+MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $sce, $mdDialog) ->
 
     for status, value of STATUS
         if value.text?
@@ -730,6 +730,18 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
         variable.editValue = null
         variable.edit = no
 
+    $scope.showHelp = ->
+
+    $scope.showAbout = (ev) ->
+        $mdDialog.show({
+                templateUrl: 'client/about/about.html'
+                controller: ['$scope', '$mdDialog', ($scope, $mdDialog) -> $scope.close = -> $mdDialog.cancel()]
+                parent: angular.element(document.body)
+                targetEvent: ev
+                clickOutsideToClose: yes
+            }
+        )
+
     #####
     # CONTENT
     #####
@@ -867,4 +879,4 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
     ]
 
 
-app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', '$timeout', '$sce', MainCtrl])
+app.controller('MainCtrl', ['$scope', '$state', '$window', '$mdMedia', '$rootScope', '$mdToast', '$timeout', '$sce', '$mdDialog', MainCtrl])
