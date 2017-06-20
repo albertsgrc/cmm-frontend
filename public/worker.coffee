@@ -1,4 +1,4 @@
-importScripts '/lib/cmm/index.js'
+importScripts '/lib/cmm/index.min.js'
 
 memory = new cmm.Memory
 debug = new cmm.Debugger
