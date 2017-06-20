@@ -618,12 +618,12 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
             $state.go('fixed-input')
             $scope.selectedIndex = 0
 
-        term = terminal()
-        term.echo(output) if output?
-        term.pop()
-
         # Output can arrive after executionFinish signal, so we must wait for the call stack to clear
-        setTimeout(->term.set_prompt("> "))
+        setTimeout(->
+            term = terminal()
+            term.pop()
+            term.set_prompt((if output? then output else "") + "> ")
+        )
 
         $scope.running = $scope.debugging = no
         $scope.waitingForInput = no
@@ -698,7 +698,8 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
 
     $scope.debug = (fromTerminal) ->
         unless fromTerminal
-            $.terminal.active().echo("> debug")
+            term = $.terminal.active()
+            term.echo(term.get_prompt() + "debug")
 
         output = null
         worker.postMessage({ command: "debug", code: editor.getValue(), input: $scope.fixedInput })
@@ -707,7 +708,8 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
 
     $scope.run = (fromTerminal) ->
         unless fromTerminal
-            $.terminal.active().echo("> run")
+            term = $.terminal.active()
+            term.echo(term.get_prompt() + "run")
 
         output = null
         worker.postMessage({ command: "run", code: editor.getValue(), input: $scope.fixedInput })
@@ -723,7 +725,8 @@ MainCtrl = ($scope, $state, $window, $mdMedia, $rootScope, $mdToast, $timeout, $
 
     $scope.compile = (fromTerminal) ->
         unless fromTerminal
-            $.terminal.active().echo("> compile")
+            term = $.terminal.active()
+            term.echo(term.get_prompt() + "compile")
 
         worker.postMessage({ command: "compile", code: editor.getValue() })
 
